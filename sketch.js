@@ -99,7 +99,7 @@ const BOSS_ZONE_Y = 300; // world Y — enter this zone to trigger boss
 // Scattered across the world — drawn in world coordinates.
 // ------------------------------------------------------------
 let bgShapes = [];
-
+let playerImg;
 // ------------------------------------------------------------
 // MINIMAP
 // Drawn in screen coordinates after pop().
@@ -122,16 +122,9 @@ const STATE_WIN = "win";
 const STATE_OVER = "over";
 let gameState = STATE_PLAY;
 
-// ------------------------------------------------------------
-// SOUNDS — uncomment and fill in paths to add audio
-// ------------------------------------------------------------
-// let shootSound;
-// let hitSound;
-// let playerHitSound;
-// let bossHitSound;
-// let bossMusic;
-// let winSound;
-// let music;
+let shootSound;
+let playerHitSound;
+let music;
 
 // ============================================================
 // preload()
@@ -140,14 +133,13 @@ function preload() {
   enemyData    = loadJSON("data/enemies.json");
   obstacleData = loadJSON("data/obstacles.json");
 
-  // Uncomment to load sounds:
-  // shootSound     = loadSound("assets/sounds/shoot.wav");
-  // hitSound       = loadSound("assets/sounds/hit.wav");
-  // playerHitSound = loadSound("assets/sounds/playerhit.wav");
-  // bossHitSound   = loadSound("assets/sounds/bosshit.wav");
-  // bossMusic      = loadSound("assets/sounds/bossmusic.mp3");
-  // winSound       = loadSound("assets/sounds/win.wav");
-  // music          = loadSound("assets/sounds/music.mp3");
+  bgImg = loadImage("assets/images/background.png");
+playerImg = loadImage("assets/images/inspector.png");
+
+music = loadSound("assets/sounds/backgroundmusic.mp3");
+shootSound = loadSound("assets/sounds/shootingsound.mp3");
+playerHitSound = loadSound("assets/sounds/hittingsound.mp3");
+
 }
 
 // ============================================================
@@ -181,14 +173,14 @@ function setup() {
   camY = player.y - height / 2;
 
   // Uncomment to start music:
-  // music.loop();
+  music.loop();
 }
 
 // ============================================================
 // draw()
 // ============================================================
 function draw() {
-  background(20);
+  image(bgImg, 0, 0, width, height);
 
   updateCamera();
 
@@ -343,7 +335,7 @@ function checkObstaclePlayerCollision() {
         player.bounceVY = (dy / len) * 8;
       }
 
-      // playerHitSound.play();
+      playerHitSound.play();
 
       if (player.health <= 0) {
         gameState = STATE_OVER;
@@ -452,7 +444,7 @@ function handleInput() {
       vy: player.direction.y * BULLET_SPEED,
     });
     player.shootTimer = SHOOT_COOLDOWN;
-    // shootSound.play();
+    shootSound.play();
   }
 }
 
@@ -642,7 +634,7 @@ function checkBossPlayerCollision() {
     player.health--;
     player.invincible      = true;
     player.invincibleTimer = INVINCIBLE_FRAMES;
-    // playerHitSound.play();
+    playerHitSound.play();
 
     if (player.health <= 0) {
       gameState = STATE_OVER;
@@ -663,7 +655,7 @@ function checkEnemyPlayerCollision() {
       player.health--;
       player.invincible      = true;
       player.invincibleTimer = INVINCIBLE_FRAMES;
-      // playerHitSound.play();
+      playerHitSound.play();
 
       if (player.health <= 0) {
         gameState = STATE_OVER;
@@ -789,33 +781,15 @@ function drawBullets() {
 function drawPlayer() {
   if (player.invincible && floor(player.invincibleTimer / 6) % 2 === 0) return;
 
-  push();
-  fill(0, 200, 180);
-  noStroke();
+  imageMode(CENTER);
 
-  beginShape();
-  let numPoints = 48;
-  for (let i = 0; i < numPoints; i++) {
-    let angle    = (TWO_PI / numPoints) * i;
-    let noiseVal = noise(cos(angle) * 0.8 + player.blobT, sin(angle) * 0.8 + player.blobT);
-    let r        = player.r + map(noiseVal, 0, 1, -6, 6);
-    vertex(player.x + cos(angle) * r, player.y + sin(angle) * r);
-  }
-  endShape(CLOSE);
-
-  fill(10);
-  ellipse(player.x - 7, player.y - 5, 7, 7);
-  ellipse(player.x + 7, player.y - 5, 7, 7);
-
-  fill(255);
-  ellipse(
-    player.x + player.direction.x * (player.r - 4),
-    player.y + player.direction.y * (player.r - 4),
-    8
+  image(
+    playerImg,
+    player.x,
+    player.y,
+    player.r * 3,
+    player.r * 3
   );
-
-  pop();
-  player.blobT += 0.015;
 }
 
 // ------------------------------------------------------------
